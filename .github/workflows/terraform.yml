@@ -34,7 +34,7 @@ jobs:
         with:
           terraform_version: 1.7.5
 
-      # Export ARM_* for both the backend and the provider
+      # Export ARM_* for both the backend and the provider (AzureRM)
       - name: Export Azure SP environment variables
         shell: bash
         env:
@@ -44,10 +44,22 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
           echo "::add-mask::${ARM_CLIENT_SECRET}"
-          echo "ARM_TENANT_ID=${ARM_TENANT_ID}"         >> $GITHUB_ENV
-          echo "ARM_CLIENT_ID=${ARM_CLIENT_ID}"         >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${ARM_CLIENT_SECRET}" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=${ARM_TENANT_ID}"           >> $GITHUB_ENV
+          echo "ARM_CLIENT_ID=${ARM_CLIENT_ID}"           >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${ARM_CLIENT_SECRET}"   >> $GITHUB_ENV
           echo "ARM_SUBSCRIPTION_ID=${ARM_SUBSCRIPTION_ID}" >> $GITHUB_ENV
+
+      # Provide TF input variables for your variables.tf (client_id/secret/tenant/sub)
+      - name: Provide Terraform root module variables via TF_VAR_*
+        shell: bash
+        env:
+          TF_VAR_client_id:       ${{ secrets.ARM_CLIENT_ID }}
+          TF_VAR_client_secret:   ${{ secrets.ARM_CLIENT_SECRET }}
+          TF_VAR_tenant_id:       ${{ secrets.ARM_TENANT_ID }}
+          TF_VAR_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          echo "::add-mask::${TF_VAR_client_secret}"
+          echo "TF root module variables provided via TF_VAR_*"
 
       # Optional: cache plugin dir to speed up init
       - name: Cache Terraform plugin directory
@@ -124,10 +136,21 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
         run: |
           echo "::add-mask::${ARM_CLIENT_SECRET}"
-          echo "ARM_TENANT_ID=${ARM_TENANT_ID}"         >> $GITHUB_ENV
-          echo "ARM_CLIENT_ID=${ARM_CLIENT_ID}"         >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${ARM_CLIENT_SECRET}" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=${ARM_TENANT_ID}"           >> $GITHUB_ENV
+          echo "ARM_CLIENT_ID=${ARM_CLIENT_ID}"           >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${ARM_CLIENT_SECRET}"   >> $GITHUB_ENV
           echo "ARM_SUBSCRIPTION_ID=${ARM_SUBSCRIPTION_ID}" >> $GITHUB_ENV
+
+      - name: Provide Terraform root module variables via TF_VAR_*
+        shell: bash
+        env:
+          TF_VAR_client_id:       ${{ secrets.ARM_CLIENT_ID }}
+          TF_VAR_client_secret:   ${{ secrets.ARM_CLIENT_SECRET }}
+          TF_VAR_tenant_id:       ${{ secrets.ARM_TENANT_ID }}
+          TF_VAR_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        run: |
+          echo "::add-mask::${TF_VAR_client_secret}"
+          echo "TF root module variables provided via TF_VAR_*"
 
       - name: Terraform init (RBAC backend)
         working-directory: ${{ env.TF_WORKING_DIR }}
