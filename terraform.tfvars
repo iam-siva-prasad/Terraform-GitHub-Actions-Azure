@@ -1,9 +1,3 @@
-
-subscription_id = "28e1e42a-4438-4c30-9a5f-7d7b488fd883"
-tenant_id       = "84f1e4ea-8554-43e1-8709-f0b8589ea118"
-client_id       = "991ac906-043a-4f0e-97d3-87b394dd491e"
-client_secret   = "Gz08Q~~y6M3esA.-Y92fQvS2KBcqBCotGHhxedwV"
-
 project_name        = "Proj-win-10"
 location            = "eastus"
 resource_group_name = "1-3f818d04-playground-sandbox"
