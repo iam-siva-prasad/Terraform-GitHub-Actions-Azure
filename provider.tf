@@ -18,6 +18,9 @@ terraform {
 }
 
 
+provider "azurerm" {
+  features {}
+
 # provider "azurerm" {
 #   features {}
 #    #If you’re using Service Principal env vars:
