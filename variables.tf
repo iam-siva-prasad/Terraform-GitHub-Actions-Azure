@@ -1,28 +1,3 @@
-
-variable "client_id" {
-  type        = string
-  sensitive   = true
-  description = "Azure Service Principal App ID"
-}
-
-variable "client_secret" {
-  type        = string
-  sensitive   = true
-  description = "Azure Service Principal Secret"
-}
-
-variable "tenant_id" {
-  type        = string
-  sensitive   = true
-  description = "Azure Tenant ID"
-}
-
-variable "subscription_id" {
-  type        = string
-  sensitive   = true
-  description = "Azure Subscription ID"
-}
-
 variable "project_name" {
   description = "Prefix for resource names"
   type        = string
