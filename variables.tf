@@ -69,7 +69,7 @@ variable "admin_password" {
   description = "Local admin password (sensitive)"
   type        = string
   sensitive   = true
-  default = "SivaGoli@2000"
+  default     = "SivaGoli@2000"
 }
 
 variable "rdp_source_ip" {
