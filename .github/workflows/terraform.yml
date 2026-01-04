@@ -1,165 +1,165 @@
 
-name: Terraform CI/CD to Azure
+# name: Terraform CI/CD to Azure
 
-on:
-  push:
-    branches:
-      - '**'
-  pull_request:
-    branches:
-      - '**'
-  workflow_dispatch:
+# on:
+#   push:
+#     branches:
+#       - '**'
+#   pull_request:
+#     branches:
+#       - '**'
+#   workflow_dispatch:
 
-permissions:
-  contents: read
-  pull-requests: write
+# permissions:
+#   contents: read
+#   pull-requests: write
 
-env:
-  # Change if your Terraform lives in a subfolder (e.g., infra/)
-  TF_WORKING_DIR: ./
-  TF_LOG: WARN
-  TF_IN_AUTOMATION: true
+# env:
+#   # Change if your Terraform lives in a subfolder (e.g., infra/)
+#   TF_WORKING_DIR: ./
+#   TF_LOG: WARN
+#   TF_IN_AUTOMATION: true
 
-jobs:
-  terraform:
-    name: Terraform fmt/init/validate/plan
-    runs-on: ubuntu-latest
+# jobs:
+#   terraform:
+#     name: Terraform fmt/init/validate/plan
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.7.5
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: 1.7.5
 
-      # Export ARM_* for both the backend and the provider (AzureRM)
-      - name: Export Azure SP environment variables
-        shell: bash
-        env:
-          ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
-          ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          echo "::add-mask::${ARM_CLIENT_SECRET}"
-          echo "ARM_TENANT_ID=${ARM_TENANT_ID}"           >> $GITHUB_ENV
-          echo "ARM_CLIENT_ID=${ARM_CLIENT_ID}"           >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${ARM_CLIENT_SECRET}"   >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=${ARM_SUBSCRIPTION_ID}" >> $GITHUB_ENV
+#       # Export ARM_* for both the backend and the provider (AzureRM)
+#       - name: Export Azure SP environment variables
+#         shell: bash
+#         env:
+#           ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
+#           ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
+#           ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
+#           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+#         run: |
+#           echo "::add-mask::${ARM_CLIENT_SECRET}"
+#           echo "ARM_TENANT_ID=${ARM_TENANT_ID}"           >> $GITHUB_ENV
+#           echo "ARM_CLIENT_ID=${ARM_CLIENT_ID}"           >> $GITHUB_ENV
+#           echo "ARM_CLIENT_SECRET=${ARM_CLIENT_SECRET}"   >> $GITHUB_ENV
+#           echo "ARM_SUBSCRIPTION_ID=${ARM_SUBSCRIPTION_ID}" >> $GITHUB_ENV
 
-      # Provide TF input variables for your variables.tf (client_id/secret/tenant/sub)
-      - name: Provide Terraform root module variables via TF_VAR_*
-        shell: bash
-        env:
-          TF_VAR_client_id:       ${{ secrets.ARM_CLIENT_ID }}
-          TF_VAR_client_secret:   ${{ secrets.ARM_CLIENT_SECRET }}
-          TF_VAR_tenant_id:       ${{ secrets.ARM_TENANT_ID }}
-          TF_VAR_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          echo "::add-mask::${TF_VAR_client_secret}"
-          echo "TF root module variables provided via TF_VAR_*"
+#       # Provide TF input variables for your variables.tf (client_id/secret/tenant/sub)
+#       - name: Provide Terraform root module variables via TF_VAR_*
+#         shell: bash
+#         env:
+#           TF_VAR_client_id:       ${{ secrets.ARM_CLIENT_ID }}
+#           TF_VAR_client_secret:   ${{ secrets.ARM_CLIENT_SECRET }}
+#           TF_VAR_tenant_id:       ${{ secrets.ARM_TENANT_ID }}
+#           TF_VAR_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+#         run: |
+#           echo "::add-mask::${TF_VAR_client_secret}"
+#           echo "TF root module variables provided via TF_VAR_*"
 
-      # Optional: cache plugin dir to speed up init
-      - name: Cache Terraform plugin directory
-        uses: actions/cache@v4
-        with:
-          path: ~/.terraform.d/plugin-cache
-          key: ${{ runner.os }}-tfplugins-${{ hashFiles('**/.terraform.lock.hcl') }}
-          restore-keys: |
-            ${{ runner.os }}-tfplugins-
+#       # Optional: cache plugin dir to speed up init
+#       - name: Cache Terraform plugin directory
+#         uses: actions/cache@v4
+#         with:
+#           path: ~/.terraform.d/plugin-cache
+#           key: ${{ runner.os }}-tfplugins-${{ hashFiles('**/.terraform.lock.hcl') }}
+#           restore-keys: |
+#             ${{ runner.os }}-tfplugins-
 
-      - name: Configure plugin cache
-        run: |
-          mkdir -p ~/.terraform.d
-          echo 'plugin_cache_dir = "~/.terraform.d/plugin-cache"' > ~/.terraform.d/terraform.rc
+#       - name: Configure plugin cache
+#         run: |
+#           mkdir -p ~/.terraform.d
+#           echo 'plugin_cache_dir = "~/.terraform.d/plugin-cache"' > ~/.terraform.d/terraform.rc
 
-      - name: Terraform fmt
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform fmt -check -diff
+#       - name: Terraform fmt
+#         working-directory: ${{ env.TF_WORKING_DIR }}
+#         run: terraform fmt -check -diff
 
-      - name: Terraform init (RBAC backend)
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform init -input=false
+#       - name: Terraform init (RBAC backend)
+#         working-directory: ${{ env.TF_WORKING_DIR }}
+#         run: terraform init -input=false
 
-      - name: Terraform validate
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform validate
+#       - name: Terraform validate
+#         working-directory: ${{ env.TF_WORKING_DIR }}
+#         run: terraform validate
 
-      - name: Terraform plan
-        id: plan
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform plan -input=false -out=tfplan
+#       - name: Terraform plan
+#         id: plan
+#         working-directory: ${{ env.TF_WORKING_DIR }}
+#         run: terraform plan -input=false -out=tfplan
 
-      # Optional: comment a brief plan success summary to PRs
-      - name: Post plan summary to PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const body = `
-            ### ✅ Terraform Plan Succeeded
-            **Workflow:** ${context.workflow}
-            **Branch:** ${context.ref}
+#       # Optional: comment a brief plan success summary to PRs
+#       - name: Post plan summary to PR
+#         if: github.event_name == 'pull_request'
+#         uses: actions/github-script@v7
+#         with:
+#           script: |
+#             const body = `
+#             ### ✅ Terraform Plan Succeeded
+#             **Workflow:** ${context.workflow}
+#             **Branch:** ${context.ref}
 
-            _For security, the full binary plan (tfplan) is not printed._
-            `;
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.pull_request.number,
-              body
-            });
+#             _For security, the full binary plan (tfplan) is not printed._
+#             `;
+#             github.rest.issues.createComment({
+#               owner: context.repo.owner,
+#               repo: context.repo.repo,
+#               issue_number: context.payload.pull_request.number,
+#               body
+#             });
 
-  apply:
-    name: Terraform apply (only on main)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: terraform
-    runs-on: ubuntu-latest
+#   apply:
+#     name: Terraform apply (only on main)
+#     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+#     needs: terraform
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.7.5
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: 1.7.5
 
-      - name: Export Azure SP environment variables
-        shell: bash
-        env:
-          ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
-          ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
-          ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          echo "::add-mask::${ARM_CLIENT_SECRET}"
-          echo "ARM_TENANT_ID=${ARM_TENANT_ID}"           >> $GITHUB_ENV
-          echo "ARM_CLIENT_ID=${ARM_CLIENT_ID}"           >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${ARM_CLIENT_SECRET}"   >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=${ARM_SUBSCRIPTION_ID}" >> $GITHUB_ENV
+#       - name: Export Azure SP environment variables
+#         shell: bash
+#         env:
+#           ARM_TENANT_ID:       ${{ secrets.ARM_TENANT_ID }}
+#           ARM_CLIENT_ID:       ${{ secrets.ARM_CLIENT_ID }}
+#           ARM_CLIENT_SECRET:   ${{ secrets.ARM_CLIENT_SECRET }}
+#           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+#         run: |
+#           echo "::add-mask::${ARM_CLIENT_SECRET}"
+#           echo "ARM_TENANT_ID=${ARM_TENANT_ID}"           >> $GITHUB_ENV
+#           echo "ARM_CLIENT_ID=${ARM_CLIENT_ID}"           >> $GITHUB_ENV
+#           echo "ARM_CLIENT_SECRET=${ARM_CLIENT_SECRET}"   >> $GITHUB_ENV
+#           echo "ARM_SUBSCRIPTION_ID=${ARM_SUBSCRIPTION_ID}" >> $GITHUB_ENV
 
-      - name: Provide Terraform root module variables via TF_VAR_*
-        shell: bash
-        env:
-          TF_VAR_client_id:       ${{ secrets.ARM_CLIENT_ID }}
-          TF_VAR_client_secret:   ${{ secrets.ARM_CLIENT_SECRET }}
-          TF_VAR_tenant_id:       ${{ secrets.ARM_TENANT_ID }}
-          TF_VAR_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        run: |
-          echo "::add-mask::${TF_VAR_client_secret}"
-          echo "TF root module variables provided via TF_VAR_*"
+#       - name: Provide Terraform root module variables via TF_VAR_*
+#         shell: bash
+#         env:
+#           TF_VAR_client_id:       ${{ secrets.ARM_CLIENT_ID }}
+#           TF_VAR_client_secret:   ${{ secrets.ARM_CLIENT_SECRET }}
+#           TF_VAR_tenant_id:       ${{ secrets.ARM_TENANT_ID }}
+#           TF_VAR_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+#         run: |
+#           echo "::add-mask::${TF_VAR_client_secret}"
+#           echo "TF root module variables provided via TF_VAR_*"
 
-      - name: Terraform init (RBAC backend)
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform init -input=false
+#       - name: Terraform init (RBAC backend)
+#         working-directory: ${{ env.TF_WORKING_DIR }}
+#         run: terraform init -input=false
 
-      - name: Terraform plan (visibility before apply)
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform plan -input=false -out=tfplan
+#       - name: Terraform plan (visibility before apply)
+#         working-directory: ${{ env.TF_WORKING_DIR }}
+#         run: terraform plan -input=false -out=tfplan
 
-      - name: Terraform apply
-        working-directory: ${{ env.TF_WORKING_DIR }}
-        run: terraform apply -input=false -auto-approve tfplan
+#       - name: Terraform apply
+#         working-directory: ${{ env.TF_WORKING_DIR }}
+#         run: terraform apply -input=false -auto-approve tfplan
