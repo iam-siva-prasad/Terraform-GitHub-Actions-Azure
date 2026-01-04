@@ -6,13 +6,6 @@ locals {
   }
 }
 
-// resource "azurerm_resource_group" "rg" {
-//   name     = var.resource_group_name
-//   location = var.location
-//   tags     = local.tags
-// }
-
-
 resource "azurerm_virtual_network" "vnet" {
   name                = "${var.project_name}-vnet"
   address_space       = var.vnet_address_space
